@@ -78,4 +78,5 @@ fn main() {
 
         thread::sleep(Duration::from_millis(MS_WAIT));
     }
+    write!(stdout, "{}", termion::cursor::Show).unwrap();
 }
