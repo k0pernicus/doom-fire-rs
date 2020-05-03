@@ -1,0 +1,9 @@
+[package]
+name = "doom-fire-rs"
+version = "0.1.0"
+authors = ["antonin"]
+edition = "2018"
+
+[dependencies]
+"lazy_static" = "1.4.0"
+"termion" = "1.5.5"
