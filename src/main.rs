@@ -18,24 +18,31 @@ use termion::raw::IntoRawMode;
 const MS_WAIT: u64 = 5;
 
 fn render(stdout: &mut Stdout, pixels_fire: &mut Vec<u8>, height: u16, width: u16) {
-    for y in 1..height {
-        for x in 0..width {
+    for x in 0..width {
+        for y in 1..height {
             let src = (y * width + x) as usize;
             let pixel = pixels_fire[src];
             if pixel == 0u8 {
-                write!(stdout, "{} ", color::Bg(color::Rgb(0u8, 0u8, 0u8))).unwrap();
                 continue;
             }
-            let spread_fire_accelerator = (rand::random::<u8>() & 3) as usize;
-            let dst = src - spread_fire_accelerator + 1;
+            let spread_fire_accelerator: u8 = (rand::random::<f64>() * 3.0).floor() as u8 & 3;
+            let dst = src - spread_fire_accelerator as usize + 1;
             if dst >= width as usize {
                 pixels_fire[dst - width as usize] = pixels_fire[src] - (spread_fire_accelerator & 1) as u8;
-                let color_index = pixels_fire[src];
-                let (r, g, b) = COLORS[color_index as usize - 1];
-                write!(stdout, "{} ", color::Bg(color::Rgb(r, g, b))).unwrap();
             }
         }
     }
+
+    for pixel in 0..height * width {
+        let color_index = pixels_fire[pixel as usize] as usize;
+        if color_index == 0 {
+            write!(stdout, "{} ", color::Bg(color::Rgb(0u8, 0u8, 0u8))).unwrap();
+            continue;
+        }
+        let (r, g, b) = COLORS[color_index - 1];
+        write!(stdout, "{} ", color::Bg(color::Rgb(r, g, b))).unwrap();
+    }                
+
     stdout.flush().unwrap();
 }
 
