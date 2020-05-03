@@ -4,16 +4,16 @@ extern crate rand;
 mod colors;
 use colors::COLORS;
 
-use std::io::{Read, Write, stdout, Stdout};
-use std::thread;
+use std::io::{stdout, Read, Stdout, Write};
 use std::process;
+use std::thread;
 use std::time::Duration;
 
 extern crate termion;
-use termion::color;
-use termion::terminal_size;
 use termion::async_stdin;
+use termion::color;
 use termion::raw::IntoRawMode;
+use termion::terminal_size;
 
 const MS_WAIT: u64 = 5;
 
@@ -28,7 +28,8 @@ fn render(stdout: &mut Stdout, pixels_fire: &mut Vec<u8>, height: u16, width: u1
             let spread_fire_accelerator: u8 = (rand::random::<f64>() * 3.0).floor() as u8 & 3;
             let dst = src - spread_fire_accelerator as usize + 1;
             if dst >= width as usize {
-                pixels_fire[dst - width as usize] = pixels_fire[src] - (spread_fire_accelerator & 1) as u8;
+                pixels_fire[dst - width as usize] =
+                    pixels_fire[src] - (spread_fire_accelerator & 1) as u8;
             }
         }
     }
@@ -41,7 +42,7 @@ fn render(stdout: &mut Stdout, pixels_fire: &mut Vec<u8>, height: u16, width: u1
         }
         let (r, g, b) = COLORS[color_index - 1];
         write!(stdout, "{} ", color::Bg(color::Rgb(r, g, b))).unwrap();
-    }                
+    }
 
     stdout.flush().unwrap();
 }
@@ -61,26 +62,28 @@ fn main() {
     }
     let (width, height): (u16, u16) = size.unwrap();
 
-    let mut pixels_fire = vec![0u8; (width*height) as usize];
+    let mut pixels_fire = vec![0u8; (width * height) as usize];
     for x in 0..width {
-        let index = (height  - 1)*width + x;
+        let index = (height - 1) * width + x;
         pixels_fire[index as usize] = 35u8;
     }
-    
+
     loop {
         // 100 ms to get the input
         let b = stdin.next();
         if let Some(Ok(b'q')) = b {
             break;
         }
-        
+
         // Be prepared to render on screen
-        write!(stdout,
+        write!(
+            stdout,
             "{}{}",
             termion::cursor::Goto(1, 1,),
-            termion::cursor::Hide)
-            .unwrap();
-            
+            termion::cursor::Hide
+        )
+        .unwrap();
+
         render(&mut stdout, &mut pixels_fire, height, width);
 
         thread::sleep(Duration::from_millis(MS_WAIT));
