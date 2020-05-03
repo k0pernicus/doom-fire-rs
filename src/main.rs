@@ -1,4 +1,5 @@
 extern crate lazy_static;
+extern crate rand;
 
 mod colors;
 use colors::COLORS;
@@ -14,31 +15,26 @@ use termion::terminal_size;
 use termion::async_stdin;
 use termion::raw::IntoRawMode;
 
-const MS_WAIT: u64 = 500;
+const MS_WAIT: u64 = 5;
 
-fn clear_screen(stdout: &mut Stdout) {
-    // Clear the screen
-}
-
-fn fill(v: &mut Vec<(u8, u8, u8)>, tick: usize, height: u16, width: u16) {
-    let mut i = 0;
-    for _ in 0..height - 1 {
-        for _ in 0..width {
-            v[i] = COLORS[tick % 2];
-            i += 1;
+fn render(stdout: &mut Stdout, pixels_fire: &mut Vec<u8>, height: u16, width: u16) {
+    for y in 1..height {
+        for x in 0..width {
+            let src = (y * width + x) as usize;
+            let pixel = pixels_fire[src];
+            if pixel == 0u8 {
+                write!(stdout, "{} ", color::Bg(color::Rgb(0u8, 0u8, 0u8))).unwrap();
+                continue;
+            }
+            let spread_fire_accelerator = (rand::random::<u8>() & 3) as usize;
+            let dst = src - spread_fire_accelerator + 1;
+            if dst >= width as usize {
+                pixels_fire[dst - width as usize] = pixels_fire[src] - (spread_fire_accelerator & 1) as u8;
+                let color_index = pixels_fire[src];
+                let (r, g, b) = COLORS[color_index as usize - 1];
+                write!(stdout, "{} ", color::Bg(color::Rgb(r, g, b))).unwrap();
+            }
         }
-    }
-
-    for _ in 0..width {
-        v[i] = COLORS[tick % 2];
-        i += 1;
-    }
-}
-
-fn render(stdout: &mut Stdout, v: &Vec<(u8, u8, u8)>, height: u16, width: u16) {
-    for position in 0..(height * width) as usize {
-        let (r, g, b) = v[position];
-        write!(stdout, "{} ", color::Bg(color::Rgb(r, g, b))).unwrap();
     }
     stdout.flush().unwrap();
 }
@@ -58,8 +54,11 @@ fn main() {
     }
     let (width, height): (u16, u16) = size.unwrap();
 
-    let mut buffer: Vec<(u8, u8, u8)> = vec![(255u8, 255u8, 255u8); (width * height) as usize];
-    let mut tick: usize = 0;
+    let mut pixels_fire = vec![0u8; (width*height) as usize];
+    for x in 0..width {
+        let index = (height  - 1)*width + x;
+        pixels_fire[index as usize] = 35u8;
+    }
     
     loop {
         // 100 ms to get the input
@@ -75,10 +74,8 @@ fn main() {
             termion::cursor::Hide)
             .unwrap();
             
-        fill(&mut buffer, tick, height, width);
-        render(&mut stdout, &buffer, height, width);
+        render(&mut stdout, &mut pixels_fire, height, width);
 
         thread::sleep(Duration::from_millis(MS_WAIT));
-        tick += 1;
     }
 }

@@ -6,7 +6,7 @@ fn to_decimal(decimal: char, unit: char) -> u8 {
 }
 
 fn hexa_str_to_decimal(hexa: &str) -> Option<(u8, u8, u8)> {
-    let c = hexa.to_lowercase().chars().collect::<Vec<char>>();
+    let c = hexa.chars().collect::<Vec<char>>();
     return Some((
         to_decimal(c[0], c[1]),
         to_decimal(c[2], c[3]),
@@ -23,7 +23,7 @@ const HEXA_COLORS: [&str; 35] = [
 
 // Convert all hexadecimal colors to triple decimal (u8) colors at compile time
 lazy_static! {
-    static ref HEX_TO_DECIMAL: HashMap<char, u8> = "0123456789abcdef"
+    static ref HEX_TO_DECIMAL: HashMap<char, u8> = "0123456789ABCDEF"
         .chars()
         .enumerate()
         .map(|(counter, c)| (c, counter as u8))
